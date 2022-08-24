@@ -3,5 +3,7 @@
     "solidity.formatter": "prettier",
     "[solidity]": {
         "editor.defaultFormatter": "JuanBlanco.solidity"
-    }
+    },
+    "solidity.compileUsingLocalVersion": "",
+    "solidity.compileUsingRemoteVersion": "0.8.12"
 }
